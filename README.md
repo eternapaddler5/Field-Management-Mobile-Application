@@ -1,4 +1,4 @@
-# field_service_managemen_app
+# field_service_management_app
 
 A new Flutter project.
 
