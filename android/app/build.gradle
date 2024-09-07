@@ -36,7 +36,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.field_service_managemen_app"
-        minSdk = flutter.minSdkVersion
+        minSdkVersion 23 // Updated from 21 to 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName

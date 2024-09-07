@@ -1,4 +1,7 @@
+import 'package:field_service_managemen_app/view/homeScreen.dart';
 import 'package:field_service_managemen_app/view/loginScreen.dart';
+import 'package:field_service_managemen_app/view/signUpScreen.dart';
+import 'package:field_service_managemen_app/view/splashScreen.dart';
 import'package:flutter/material.dart';
 
 void main (){
@@ -9,10 +12,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return  MaterialApp(
+      debugShowCheckedModeBanner: false,
       // this comment is just to see if the changes are reflecting
       //seen arlene
-      home: LoginScreen(),
+      home: const SplashScreen(),
+      routes: {
+        '/homeScreen': (context) =>  const HomeScreen(),
+        '/signUpScreen': (context) => const SignUpScreen(),
+        '/loginScreen': (context) => const LoginScreen(),
+      },
     );
   }
 }
