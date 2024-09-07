@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069618799031",
+    "project_id": "field-service-management-f2771",
+    "storage_bucket": "field-service-management-f2771.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069618799031:android:033855aa966264fa9bc832",
+        "android_client_info": {
+          "package_name": "com.example.field_service_managemen_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBA9ndTBsyCXSigLif-osEy3cDLPwnHQXE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
