@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -8,14 +9,12 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _employeeIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _employeeIdController = TextEditingController();
 
   String? _selectedRole;
   bool _showEmployeeIdField = false;
@@ -23,14 +22,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _onRoleChanged(String? newRole) {
     setState(() {
       _selectedRole = newRole;
-      _showEmployeeIdField = newRole == 'Technician' || newRole == 'Administrator';
+      _showEmployeeIdField =
+          newRole == 'Technician' || newRole == 'Administrator';
     });
   }
 
-  void _onSubmit() {
-    if (_formKey.currentState!.validate()) {
-      // You can handle the form submission here
-      Navigator.pushNamed(context, '/loginScreen');
+  Future<void> _signUp() async {
+    if (_passwordController.text == _confirmPasswordController.text) {
+      try {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _usernameController.text, // Use email as username
+          password: _passwordController.text,
+        );
+        // Navigate to login screen after successful sign-up
+        Navigator.pushNamed(context, '/loginScreen');
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-up failed: ${e.toString()}')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
     }
   }
 
@@ -39,57 +53,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign Up'),
-        centerTitle: true,
         backgroundColor: Colors.blue,
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
+        child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 200),
-              TextFormField(
+              TextField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(
                   labelText: 'First Name',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your first name';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 10),
-              TextFormField(
+              TextField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(
                   labelText: 'Last Name',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your last name';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 10),
-              TextFormField(
+              TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Email', // Use Email for Firebase Auth
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a username';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
@@ -99,74 +91,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Technician', child: Text('Technician')),
-                  DropdownMenuItem(value: 'Administrator', child: Text('Administrator')),
+                  DropdownMenuItem(
+                      value: 'Technician', child: Text('Technician')),
+                  DropdownMenuItem(
+                      value: 'Administrator', child: Text('Administrator')),
                   DropdownMenuItem(value: 'Customer', child: Text('Customer')),
                 ],
                 onChanged: _onRoleChanged,
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a role';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 10),
               if (_showEmployeeIdField)
-                TextFormField(
+                TextField(
                   controller: _employeeIdController,
                   decoration: const InputDecoration(
                     labelText: 'Employee ID',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your employee ID';
-                    }
-                    return null;
-                  },
                 ),
               if (_showEmployeeIdField) const SizedBox(height: 10),
-              TextFormField(
+              TextField(
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
-                  } else if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 10),
-              TextFormField(
+              TextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Confirm Password',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  } else if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _onSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
+                onPressed: _signUp,
                 child: const Text('Submit'),
               ),
             ],
