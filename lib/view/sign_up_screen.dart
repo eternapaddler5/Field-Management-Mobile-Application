@@ -74,6 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
+                const SizedBox(height: 65,),
                 TextFormField(
                   controller: _firstNameController,
                   decoration: const InputDecoration(

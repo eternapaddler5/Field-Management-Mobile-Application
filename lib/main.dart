@@ -1,6 +1,7 @@
 import 'package:field_service_managemen_app/view/Technician_screen.dart';
 import 'package:field_service_managemen_app/view/admin_screen.dart';
 import 'package:field_service_managemen_app/view/customer_screen.dart';
+import 'package:field_service_managemen_app/view/forgot_password_screen.dart';
 import 'package:field_service_managemen_app/view/loginScreen.dart';
 import 'package:field_service_managemen_app/view/sign_up_screen.dart';
 import 'package:field_service_managemen_app/view/splashScreen.dart';
@@ -28,6 +29,8 @@ class MyApp extends StatelessWidget {
           '/adminScreen': (context) =>  const AdminScreen(),
           '/technicianScreen': (context) =>  const TechnicianScreen(),
           '/customerScreen': (context) =>  const CustomerScreen(),
+          '/forgotPasswordScreen': (context) => const ForgotPasswordScreen(),
+
         }
 
     );

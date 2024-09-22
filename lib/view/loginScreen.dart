@@ -15,8 +15,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _isLoading = false;  // For loading indicator
+  bool _rememberMe = false; // For Remember Me checkbox
+  bool _obscurePassword = true; // For Password visibility toggle
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
       try {
         UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
@@ -30,6 +38,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         String role = userDoc['role'];
 
+        // Show success snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
+
         if (role == 'Administrator') {
           Navigator.pushNamed(context, '/adminScreen');
         } else if (role == 'Technician') {
@@ -41,8 +54,18 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e.toString()}')),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
   }
 
   @override
@@ -53,62 +76,102 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text("Login Screen"),
       ),
       body: Center(
-        child: Form(
+        child: _isLoading
+            ? const CircularProgressIndicator() // Loading spinner
+            : Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
             children: [
+
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                child: TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Email',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                child: TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Password',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                child: ElevatedButton(
-                  onPressed: _login,
-                  child: const Text('Login'),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/signUpScreen'); // Route to Sign-Up
-                },
-                child: const Text(
-                  "Don't have an account? Sign up here",
-                  style: TextStyle(color: Colors.blue),
+                padding: const EdgeInsets.symmetric(vertical: 110),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      child: TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Email',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          labelText: 'Password',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: _togglePasswordVisibility, // Toggle Password visibility
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      child: CheckboxListTile(
+                        title: const Text("Remember Me"),
+                        value: _rememberMe,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _rememberMe = newValue!;
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        child: const Text('Login'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/forgotPasswordScreen');
+                      },
+                      child: const Text("Forgot Password?"),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+
+                      children: [
+                       const  SizedBox(width: 50),
+                        const Text("Don't have an account? "),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/signUpScreen'); // Navigate to Sign-Up Screen
+                          },
+                          child: const Text(
+                            "Sign up"
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
