@@ -1,5 +1,5 @@
 import 'package:field_service_managemen_app/view/Technician_screen.dart';
-import 'package:field_service_managemen_app/view/admin_screen.dart';
+import 'package:field_service_managemen_app/view/navigation.dart';
 import 'package:field_service_managemen_app/view/customer_screen.dart';
 import 'package:field_service_managemen_app/view/forgot_password_screen.dart';
 import 'package:field_service_managemen_app/view/loginScreen.dart';
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/loginScreen': (context) => const LoginScreen(),
           '/signUpScreen': (context) => const SignUpScreen(),
-          '/adminScreen': (context) =>  const AdminScreen(),
+          '/dash': (context) =>  const NavigationScreen(),  // this is to the dash with changing tabs
           '/technicianScreen': (context) =>  const TechnicianScreen(),
           '/customerScreen': (context) =>  const CustomerScreen(),
           '/forgotPasswordScreen': (context) => const ForgotPasswordScreen(),
