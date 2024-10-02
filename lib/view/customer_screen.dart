@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
 
-class CustomerScreen extends StatefulWidget {
-  const CustomerScreen({super.key});
+class ManagerScreen extends StatefulWidget {
+  const ManagerScreen({super.key});
 
   @override
-  State<CustomerScreen> createState() => _CustomerScreenState();
+  State<ManagerScreen> createState() => _ManagerScreenState();
 }
 
-class _CustomerScreenState extends State<CustomerScreen> {
+class _ManagerScreenState extends State<ManagerScreen> {
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text("Customer")),
+        title: const Center(child: Text("Manager Dashboard")),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              '/settingsScreen',
+              arguments: 'Manager', // Pass Manager role
+            );
+          },
+          child: const Text("Settings"),
+        ),
       ),
     );
   }

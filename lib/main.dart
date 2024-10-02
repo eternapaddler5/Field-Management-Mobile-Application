@@ -3,9 +3,10 @@ import 'package:field_service_managemen_app/view/admin_screen.dart';
 import 'package:field_service_managemen_app/view/customer_screen.dart';
 import 'package:field_service_managemen_app/view/forgot_password_screen.dart';
 import 'package:field_service_managemen_app/view/loginScreen.dart';
+import 'package:field_service_managemen_app/view/settings_screen.dart';
 import 'package:field_service_managemen_app/view/sign_up_screen.dart';
 import 'package:field_service_managemen_app/view/splashScreen.dart';
-import'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -13,26 +14,28 @@ void main() async {
   await Firebase.initializeApp();
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      debugShowCheckedModeBanner: false,
-      // this comment is just to see if the changes are reflecting
-      //seen arlene
-      home: const SplashScreen(),
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        // this comment is just to see if the changes are reflecting
+        //seen arlene
+        home: const SplashScreen(),
         routes: {
           '/loginScreen': (context) => const LoginScreen(),
           '/signUpScreen': (context) => const SignUpScreen(),
-          '/adminScreen': (context) =>  const AdminScreen(),
-          '/technicianScreen': (context) =>  const TechnicianScreen(),
-          '/customerScreen': (context) =>  const CustomerScreen(),
+          '/adminScreen': (context) => const AdminScreen(),
+          '/technicianScreen': (context) => const TechnicianScreen(),
+          '/managerScreen': (context) => const ManagerScreen(),
           '/forgotPasswordScreen': (context) => const ForgotPasswordScreen(),
+          '/settingsScreen': (context) => SettingsScreen(
+            userRole: ModalRoute.of(context)?.settings.arguments as String,
+          ),
 
-        }
-
-    );
+        });
   }
 }

@@ -11,11 +11,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;  // For loading indicator
+  bool _isLoading = false; // For loading indicator
   bool _rememberMe = false; // For Remember Me checkbox
   bool _obscurePassword = true; // For Password visibility toggle
 
@@ -26,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
@@ -43,12 +43,13 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Login successful!')),
         );
 
+        // Route based on the user role
         if (role == 'Administrator') {
           Navigator.pushNamed(context, '/adminScreen');
         } else if (role == 'Technician') {
           Navigator.pushNamed(context, '/technicianScreen');
-        } else {
-          Navigator.pushNamed(context, '/customerScreen');
+        } else if (role == 'Manager') {
+          Navigator.pushNamed(context, '/managerScreen');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -71,10 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.cyan,
-        title: const Text("Login Screen"),
-      ),
       body: Center(
         child: _isLoading
             ? const CircularProgressIndicator() // Loading spinner
@@ -82,14 +79,24 @@ class _LoginScreenState extends State<LoginScreen> {
           key: _formKey,
           child: ListView(
             children: [
-
+              Container(
+                width: 240,
+                height: 240,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  image: DecorationImage(
+                    image: AssetImage("lib/view/assets/FSM Logo.png"),
+                  ),
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 110),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 10),
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -100,7 +107,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your email';
-                          } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                              .hasMatch(value)) {
                             return 'Please enter a valid email';
                           }
                           return null;
@@ -108,7 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 10),
                       child: TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -117,9 +126,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Password',
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
-                            onPressed: _togglePasswordVisibility, // Toggle Password visibility
+                            onPressed:
+                            _togglePasswordVisibility, // Toggle Password visibility
                           ),
                         ),
                         validator: (value) {
@@ -131,7 +143,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 4),
                       child: CheckboxListTile(
                         title: const Text("Remember Me"),
                         value: _rememberMe,
@@ -143,7 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 5),
                       child: ElevatedButton(
                         onPressed: _login,
                         child: const Text('Login'),
@@ -151,23 +165,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/forgotPasswordScreen');
+                        Navigator.pushNamed(
+                            context, '/forgotPasswordScreen');
                       },
                       child: const Text("Forgot Password?"),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Row(
-
                       children: [
-                       const  SizedBox(width: 50),
+                        const SizedBox(width: 50),
                         const Text("Don't have an account? "),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, '/signUpScreen'); // Navigate to Sign-Up Screen
+                            Navigator.pushNamed(context,
+                                '/signUpScreen'); // Navigate to Sign-Up Screen
                           },
-                          child: const Text(
-                            "Sign up"
-                          ),
+                          child: const Text("Sign up"),
                         ),
                       ],
                     ),

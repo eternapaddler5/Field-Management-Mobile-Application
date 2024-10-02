@@ -15,39 +15,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _employeeIdController = TextEditingController();
 
   String? _selectedRole;
-  bool _showEmployeeIdField = false;
-
-  void _onRoleChanged(String? newRole) {
-    setState(() {
-      _selectedRole = newRole;
-      _showEmployeeIdField = newRole == 'Technician' || newRole == 'Administrator';
-    });
-  }
+  bool _isLoading = false; // This is the loading state
 
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text == _confirmPasswordController.text) {
+        setState(() {
+          _isLoading = true; // Start loading
+        });
+
         try {
-          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: _usernameController.text,
             password: _passwordController.text,
           );
 
-          await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).set({
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userCredential.user?.uid)
+              .set({
             'firstName': _firstNameController.text,
             'lastName': _lastNameController.text,
             'email': _usernameController.text,
+            'phone': _phoneController.text,
             'role': _selectedRole,
-            if (_showEmployeeIdField) 'employeeId': _employeeIdController.text,
+            'employeeId': _employeeIdController.text,
           });
 
+          setState(() {
+            _isLoading = false; // Stop loading
+          });
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sign-up complete!')),
+          );
+
+          // Navigate to login screen after sign-up
           Navigator.pushNamed(context, '/loginScreen');
         } catch (e) {
+          setState(() {
+            _isLoading = false; // Stop loading if there's an error
+          });
+
+          // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Sign-up failed: ${e.toString()}')),
           );
@@ -74,7 +92,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 65,),
+                const SizedBox(height: 65),
                 TextFormField(
                   controller: _firstNameController,
                   decoration: const InputDecoration(
@@ -119,6 +137,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 10),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: _selectedRole,
                   decoration: const InputDecoration(
@@ -130,9 +162,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         value: 'Technician', child: Text('Technician')),
                     DropdownMenuItem(
                         value: 'Administrator', child: Text('Administrator')),
-                    DropdownMenuItem(value: 'Customer', child: Text('Customer')),
+                    DropdownMenuItem(value: 'Manager', child: Text('Manager')),
                   ],
-                  onChanged: _onRoleChanged,
+                  onChanged: (String? value) {
+                    setState(() {
+                      _selectedRole = value;
+                    });
+                  },
                   validator: (value) {
                     if (value == null) {
                       return 'Please select a role';
@@ -141,22 +177,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 10),
-                if (_showEmployeeIdField)
-                  TextFormField(
-                    controller: _employeeIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Employee ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (_showEmployeeIdField &&
-                          (value == null || value.isEmpty)) {
-                        return 'Please enter your Employee ID';
-                      }
-                      return null;
-                    },
+                TextFormField(
+                  controller: _employeeIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Employee ID',
+                    border: OutlineInputBorder(),
                   ),
-                if (_showEmployeeIdField) const SizedBox(height: 10),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your Employee ID';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -189,7 +223,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton(
+                _isLoading
+                    ? const CircularProgressIndicator() // Loading spinner
+                    : ElevatedButton(
                   onPressed: _signUp,
                   child: const Text('Submit'),
                 ),

@@ -10,6 +10,22 @@ class TechnicianScreen extends StatefulWidget {
 class _TechnicianScreenState extends State<TechnicianScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Technician Dashboard"),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              '/settingsScreen',
+              arguments: 'Technician', // Pass Technician role
+            );
+          },
+          child: const Text("Settings"),
+        ),
+      ),
+    );
   }
 }

@@ -9,10 +9,18 @@ class AdminScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
       ),
-      body: const Center(
-        child: Text('Welcome, Administrator!'),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              '/settingsScreen',
+              arguments: 'Administrator', // Pass Administrator role
+            );
+          },
+          child: const Text("Settings"),
+        ),
       ),
     );
   }
 }
-
