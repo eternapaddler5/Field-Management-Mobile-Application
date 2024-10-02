@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Route based on the user role
         if (role == 'Administrator') {
-          Navigator.pushNamed(context, '/adminScreen');
+          Navigator.pushNamed(context, '/dash'); // this was the adminScreen
         } else if (role == 'Technician') {
           Navigator.pushNamed(context, '/technicianScreen');
         } else if (role == 'Manager') {
