@@ -15,16 +15,6 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
         title: const Text("Technician Dashboard"),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(
-              context,
-              '/settingsScreen',
-              arguments: 'Technician', // Pass Technician role
-            );
-          },
-          child: const Text("Settings"),
-        ),
       ),
     );
   }

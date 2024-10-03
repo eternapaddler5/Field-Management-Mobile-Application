@@ -3,17 +3,64 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String userRole; // Accept role as a parameter to distinguish privileges
+  final bool isDarkMode; // Dark mode status
+  final String selectedLanguage; // Selected language
+  final ValueChanged<bool> onThemeChanged; // Callback for theme change
+  final ValueChanged<String> onLanguageChanged; // Callback for language change
 
-  const SettingsScreen({Key? key, required this.userRole}) : super(key: key);
+  const SettingsScreen({
+    Key? key,
+    required this.userRole,
+    required this.isDarkMode,
+    required this.selectedLanguage,
+    required this.onThemeChanged,
+    required this.onLanguageChanged,
+  }) : super(key: key);
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String? _selectedLanguage;
   bool _notificationsEnabled = true;
   List<String> _serviceCategories = ["Cleaning", "Plumbing", "Electrical"]; // Sample categories
+
+  // Translated strings
+  final Map<String, Map<String, String>> _localizedStrings = {
+    'English': {
+      'settings': 'Settings',
+      'default_service_categories': 'Default Service Categories',
+      'notification_settings': 'Notification Settings',
+      'language_preferences': 'Language Preferences',
+      'dark_mode': 'Dark Mode',
+      'enable_dark_mode': 'Enable Dark Mode',
+      'manage_profiles': 'Manage Profiles',
+      'edit_profile': 'Edit Profile',
+    },
+    'Spanish': {
+      'settings': 'Configuraciones',
+      'default_service_categories': 'Categorías de Servicio Predeterminadas',
+      'notification_settings': 'Configuraciones de Notificación',
+      'language_preferences': 'Preferencias de Idioma',
+      'dark_mode': 'Modo Oscuro',
+      'enable_dark_mode': 'Activar Modo Oscuro',
+      'manage_profiles': 'Gestionar Perfiles',
+      'edit_profile': 'Editar Perfil',
+    },
+    'French': {
+      'settings': 'Paramètres',
+      'default_service_categories': 'Catégories de Service Par Défaut',
+      'notification_settings': 'Paramètres de Notification',
+      'language_preferences': 'Préférences de Langue',
+      'dark_mode': 'Mode Sombre',
+      'enable_dark_mode': 'Activer le Mode Sombre',
+      'manage_profiles': 'Gérer les Profils',
+      'edit_profile': 'Modifier le Profil',
+    },
+    // Add more languages here...
+  };
+
+  String get _currentLanguage => widget.selectedLanguage;
 
   @override
   void initState() {
@@ -24,16 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedLanguage = prefs.getString('language') ?? 'English'; // Default language
       _notificationsEnabled = prefs.getBool('notifications') ?? true;
-    });
-  }
-
-  Future<void> _saveLanguagePreference(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('language', language);
-    setState(() {
-      _selectedLanguage = language;
     });
   }
 
@@ -49,15 +87,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.blue,
+        title: Text(_localizedStrings[_currentLanguage]!['settings']!),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
         children: [
-          // Notification Settings - Accessible by all roles
+          // Notification Settings
           SwitchListTile(
-            title: const Text('Notifications'),
+            title: Text(_localizedStrings[_currentLanguage]!['notification_settings']!),
             subtitle: const Text('Enable or disable notifications'),
             value: _notificationsEnabled,
             onChanged: (bool value) {
@@ -66,32 +102,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
 
-          // Language Preferences - Accessible by all roles
+          // Language Preferences
           ListTile(
             leading: const Icon(Icons.language),
             title: const Text('Language Preferences'),
-            subtitle: Text('Current language: $_selectedLanguage'),
+            subtitle: Text('Current language: ${widget.selectedLanguage}'),
             onTap: () {
               _showLanguageDialog(context);
             },
           ),
           const Divider(),
 
-          // Only show Manage Profile for Manager and Admin
+          // Dark Mode
+          SwitchListTile(
+            title: Text(_localizedStrings[_currentLanguage]!['enable_dark_mode']!),
+            value: widget.isDarkMode,
+            onChanged: widget.onThemeChanged,
+          ),
+          const Divider(),
+
+          // Profile Management and Service Categories for Manager/Admin
           if (widget.userRole == 'Manager' || widget.userRole == 'Administrator') ...[
             ListTile(
               leading: const Icon(Icons.person),
-              title: const Text('Manage Profile'),
-              subtitle: const Text('Edit profile and user information'),
+              title: Text(_localizedStrings[_currentLanguage]!['manage_profiles']!),
               onTap: () {
-                Navigator.pushNamed(context, '/profileScreen');
+                // Profile management code here
               },
             ),
             const Divider(),
-          ],
-
-          // Service Categories - Accessible by Manager and Admin
-          if (widget.userRole == 'Manager' || widget.userRole == 'Administrator') ...[
             ListTile(
               leading: const Icon(Icons.category),
               title: const Text('Service Categories'),
@@ -103,14 +142,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(),
           ],
 
-          // Manage Roles & Permissions - Only Admin
+          // Admin-only settings
           if (widget.userRole == 'Administrator') ...[
             ListTile(
               leading: const Icon(Icons.admin_panel_settings),
               title: const Text('Manage Roles and Permissions'),
               subtitle: const Text('Set roles and permissions for users'),
               onTap: () {
-                Navigator.pushNamed(context, '/rolesScreen');
+                // Role management code here
               },
             ),
             const Divider(),
@@ -134,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 title: Text(language),
                 onTap: () {
-                  _saveLanguagePreference(language);
+                  widget.onLanguageChanged(language);
                   Navigator.pop(context); // Close the modal
                 },
               ),

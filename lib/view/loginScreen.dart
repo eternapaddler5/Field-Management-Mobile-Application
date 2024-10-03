@@ -45,11 +45,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Route based on the user role
         if (role == 'Administrator') {
-          Navigator.pushNamed(context, '/dash'); // this was the adminScreen
+          Navigator.pushNamed(context, '/navigationAdmin'); // this was the adminScreen
         } else if (role == 'Technician') {
-          Navigator.pushNamed(context, '/technicianScreen');
+          Navigator.pushNamed(context, '/navigationTech');
         } else if (role == 'Manager') {
-          Navigator.pushNamed(context, '/managerScreen');
+          Navigator.pushNamed(context, '/navigationManager');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
