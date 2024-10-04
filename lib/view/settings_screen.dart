@@ -23,7 +23,12 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
-  List<String> _serviceCategories = ["Cleaning", "Plumbing", "Electrical"]; // Sample categories
+  late bool _isDarkMode;
+  List<String> _serviceCategories = [
+    "Cleaning",
+    "Plumbing",
+    "Electrical"
+  ]; // Sample categories
 
   // Translated strings
   final Map<String, Map<String, String>> _localizedStrings = {
@@ -35,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'dark_mode': 'Dark Mode',
       'enable_dark_mode': 'Enable Dark Mode',
       'manage_profiles': 'Manage Profiles',
-      'edit_profile': 'Edit Profile',
+      'logout': 'Logout',
     },
     'Spanish': {
       'settings': 'Configuraciones',
@@ -45,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'dark_mode': 'Modo Oscuro',
       'enable_dark_mode': 'Activar Modo Oscuro',
       'manage_profiles': 'Gestionar Perfiles',
-      'edit_profile': 'Editar Perfil',
+      'logout': 'Cerrar Sesión',
     },
     'French': {
       'settings': 'Paramètres',
@@ -55,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'dark_mode': 'Mode Sombre',
       'enable_dark_mode': 'Activer le Mode Sombre',
       'manage_profiles': 'Gérer les Profils',
-      'edit_profile': 'Modifier le Profil',
+      'logout': 'Se Déconnecter',
     },
     // Add more languages here...
   };
@@ -65,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _isDarkMode = widget.isDarkMode; // Initialize with passed value
     _loadPreferences();
   }
 
@@ -93,7 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Notification Settings
           SwitchListTile(
-            title: Text(_localizedStrings[_currentLanguage]!['notification_settings']!),
+            title: Text(
+                _localizedStrings[_currentLanguage]!['notification_settings']!),
             subtitle: const Text('Enable or disable notifications'),
             value: _notificationsEnabled,
             onChanged: (bool value) {
@@ -115,17 +122,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Dark Mode
           SwitchListTile(
-            title: Text(_localizedStrings[_currentLanguage]!['enable_dark_mode']!),
-            value: widget.isDarkMode,
-            onChanged: widget.onThemeChanged,
+            title:
+                Text(_localizedStrings[_currentLanguage]!['enable_dark_mode']!),
+            value: _isDarkMode,
+            onChanged: (bool value) {
+              setState(() {
+                _isDarkMode = value;
+              });
+              widget.onThemeChanged(value); // Notify parent widget
+            },
           ),
           const Divider(),
 
           // Profile Management and Service Categories for Manager/Admin
-          if (widget.userRole == 'Manager' || widget.userRole == 'Administrator') ...[
+          if (widget.userRole == 'Manager' ||
+              widget.userRole == 'Administrator') ...[
             ListTile(
               leading: const Icon(Icons.person),
-              title: Text(_localizedStrings[_currentLanguage]!['manage_profiles']!),
+              title: Text(
+                  _localizedStrings[_currentLanguage]!['manage_profiles']!),
               onTap: () {
                 // Profile management code here
               },
@@ -154,9 +169,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const Divider(),
           ],
+
+          // Logout Option
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: Text(_localizedStrings[_currentLanguage]!['logout']!),
+            onTap: () {
+              _logout();
+            },
+          ),
         ],
       ),
     );
+  }
+
+  // Function to handle logout
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clear user data
+    // Navigate to login screen or other logic
+    Navigator.of(context).pushReplacementNamed('/loginScreen');
   }
 
   // Function to show the language selection dialog
