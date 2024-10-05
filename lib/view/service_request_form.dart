@@ -3,15 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:intl/intl.dart'; // For date formatting
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-
-import 'form_provider.dart';
- // Import FormProvider
+import 'form_provider.dart'; // Import FormProvider
 
 class ServiceRequestForm extends StatefulWidget {
   @override
@@ -32,10 +25,11 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _selectedDate)
+    if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
       });
+    }
   }
 
   Future<void> _selectTime(BuildContext context) async {
@@ -43,10 +37,11 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (picked != null && picked != _selectedTime)
+    if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
       });
+    }
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -62,38 +57,38 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
     }
   }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  Future<void> _checkAndRequestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      // Handle permission permanently denied
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+    }
+  }
 
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled don't continue
       return Future.error('Location services are disabled.');
     }
 
-    permission = await Geolocator.checkPermission();
+    await _checkAndRequestLocationPermission();
+
+    // Check permissions again after requesting
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
-      }
+      return Future.error('Location permissions are denied');
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+    try {
+      _currentPosition = await Geolocator.getCurrentPosition();
+      setState(() {});
+    } catch (e) {
+      print('Error getting location: $e');
+      // Handle the error appropriately, like showing a dialog
     }
-
-    _currentPosition = await Geolocator.getCurrentPosition();
-    setState(() {});
   }
 
   @override
@@ -212,7 +207,10 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                         : 'Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
                   ),
                   trailing: Icon(Icons.location_on),
-                  onTap: _getCurrentLocation,
+                  onTap: () async {
+                    await _checkAndRequestLocationPermission();
+                    await _getCurrentLocation();
+                  },
                 ),
                 ElevatedButton(
                   onPressed: () {
