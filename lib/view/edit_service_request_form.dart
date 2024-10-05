@@ -7,23 +7,41 @@ import 'package:geolocator/geolocator.dart';
 
 import 'form_provider.dart';
 
-class ServiceRequestForm extends StatefulWidget {
+class EditServiceRequestForm extends StatefulWidget {
+  final int index;
+  final Map<String, dynamic> requestData;
+
+  EditServiceRequestForm({required this.index, required this.requestData});
+
   @override
-  _ServiceRequestFormState createState() => _ServiceRequestFormState();
+  _EditServiceRequestFormState createState() => _EditServiceRequestFormState();
 }
 
-class _ServiceRequestFormState extends State<ServiceRequestForm> {
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+class _EditServiceRequestFormState extends State<EditServiceRequestForm> {
+  late DateTime? _selectedDate;
+  late TimeOfDay? _selectedTime;
   File? _image;
   Position? _currentPosition;
   final ImagePicker _picker = ImagePicker();
 
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _descriptionController;
   String? _selectedServiceType;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.requestData['name']);
+    _emailController = TextEditingController(text: widget.requestData['email']);
+    _phoneController = TextEditingController(text: widget.requestData['phone']);
+    _descriptionController = TextEditingController(text: widget.requestData['description']);
+    _selectedServiceType = widget.requestData['serviceType'];
+    _selectedDate = widget.requestData['date'] != null ? DateFormat.yMd().parse(widget.requestData['date']) : null;
+    _selectedTime = widget.requestData['time'] != null ? TimeOfDay(hour: int.parse(widget.requestData['time'].split(":")[0]), minute: int.parse(widget.requestData['time'].split(":")[1])) : null;
+    _image = widget.requestData['image'];
+  }
 
   @override
   void dispose() {
@@ -37,7 +55,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
@@ -51,7 +69,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _selectedTime ?? TimeOfDay.now(),
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -104,7 +122,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Service Request Form'),
+        title: Text('Edit Service Request'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -159,6 +177,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                   decoration: InputDecoration(
                     labelText: 'Service Type',
                   ),
+                  value: _selectedServiceType,
                   items: [
                     DropdownMenuItem(value: 'consultation', child: Text('Consultation')),
                     DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
@@ -225,28 +244,22 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                   onTap: _getCurrentLocation,
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (formProvider.formKey.currentState?.validate() ?? false) {
-                      final formData = {
-                        'name': _nameController.text,
-                        'email': _emailController.text,
-                        'phone': _phoneController.text,
-                        'serviceType': _selectedServiceType,
-                        'description': _descriptionController.text,
-                        'date': _selectedDate != null ? DateFormat.yMd().format(_selectedDate!) : null,
-                        'time': _selectedTime != null ? _selectedTime!.format(context) : null,
-                        'latitude': _currentPosition?.latitude,
-                        'longitude': _currentPosition?.longitude,
-                      };
-
-                      // Submit the form data
-                      await formProvider.submitForm(formData, _image);
-
-                      // Navigate to the ServiceRequestList screen after form submission
-                      Navigator.of(context).pushReplacementNamed('/serviceRequestList');
-                    }
+                  onPressed: () {
+                    final updatedData = {
+                      'name': _nameController.text,
+                      'email': _emailController.text,
+                      'phone': _phoneController.text,
+                      'serviceType': _selectedServiceType,
+                      'description': _descriptionController.text,
+                      'date': _selectedDate != null ? DateFormat.yMd().format(_selectedDate!) : null,
+                      'time': _selectedTime != null ? _selectedTime!.format(context) : null,
+                      'latitude': _currentPosition?.latitude,
+                      'longitude': _currentPosition?.longitude,
+                    };
+                    formProvider.updateForm(widget.index, updatedData, _image);
+                    Navigator.pop(context);
                   },
-                  child: Text('Submit'),
+                  child: Text('Save Changes'),
                 ),
               ],
             ),

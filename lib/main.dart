@@ -15,6 +15,8 @@ import 'package:field_service_managemen_app/view/sign_up_screen.dart';
 import 'package:field_service_managemen_app/view/splashScreen.dart';
 import 'package:field_service_managemen_app/view/form_provider.dart';
 import 'package:field_service_managemen_app/view/service_request_form.dart' as form_view; // Correct import for ServiceRequestForm
+import 'package:field_service_managemen_app/view/service_request_list.dart';
+import 'package:field_service_managemen_app/view/edit_service_request_form.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +47,7 @@ class _MyAppState extends State<MyApp> {
         theme: _isDarkMode ? ThemeData.dark() : ThemeData.light(),
         home: const SplashScreen(),
         routes: {
+          '/serviceRequestList': (context) => ServiceRequestList(),
           '/serviceRequestForm': (context) => form_view.ServiceRequestForm(),
           '/loginScreen': (context) => const LoginScreen(),
           '/signUpScreen': (context) => const SignUpScreen(),
@@ -70,6 +73,20 @@ class _MyAppState extends State<MyApp> {
               });
             },
           ),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/editServiceRequest') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) {
+                return EditServiceRequestForm(
+                  index: args['index'],
+                  requestData: args['requestData'],
+                );
+              },
+            );
+          }
+          return null;
         },
       ),
     );
