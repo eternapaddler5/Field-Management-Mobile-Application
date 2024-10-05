@@ -1,3 +1,4 @@
+import 'package:field_service_managemen_app/view/manage_user.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -164,7 +165,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Manage Roles and Permissions'),
               subtitle: const Text('Set roles and permissions for users'),
               onTap: () {
-                // Role management code here
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ManageUsersScreen()),
+                );
               },
             ),
             const Divider(),

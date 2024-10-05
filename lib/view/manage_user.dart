@@ -1,4 +1,4 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ManageUsersScreen extends StatefulWidget {
@@ -9,6 +9,7 @@ class ManageUsersScreen extends StatefulWidget {
 class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _users = [];
+  final List<String> _roles = ['Technician', 'Manager', 'Administrator'];
 
   @override
   void initState() {
@@ -48,15 +49,22 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       body: ListView.builder(
         itemCount: _users.length,
         itemBuilder: (context, index) {
+          String currentRole = _users[index]['role'];
+
+          // Ensure the role is a valid option in the dropdown, otherwise set a default.
+          if (!_roles.contains(currentRole)) {
+            currentRole = _roles.first;
+          }
+
           return ListTile(
             title: Text(_users[index]['email']),
-            subtitle: Text('Role: ${_users[index]['role']}'),
+            subtitle: Text('Role: $currentRole'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButton<String>(
-                  value: _users[index]['role'],
-                  items: <String>['User', 'Manager', 'Administrator'].map((String value) {
+                  value: currentRole,
+                  items: _roles.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -81,4 +89,4 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       ),
     );
   }
-}*/
+}
