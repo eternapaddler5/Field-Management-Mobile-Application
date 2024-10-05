@@ -2,6 +2,8 @@ import 'package:field_service_managemen_app/view/Technician_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../view/service_request_form.dart';
+
 class NavigationTech extends StatefulWidget {
   final String userRole; // Role of the user (Manager, Technician, etc.)
 
@@ -14,8 +16,8 @@ class NavigationTech extends StatefulWidget {
 class _NavigationTechState extends State<NavigationTech> {
   final appScreens = [
     const TechnicianScreen(),
-    const Text("Search"),
-    const Text("Tickets"),
+    ServiceRequestForm(),
+    const Text("Access denied"),
     const Text("Settings"), // Placeholder for settings screen
   ];
 
