@@ -1,103 +1,111 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class ManageProfileScreen extends StatefulWidget {
-  final Map<String, dynamic>? userData; // Optional pre-fetched user data
-
-  ManageProfileScreen({this.userData});
+  const ManageProfileScreen({Key? key}) : super(key: key);
 
   @override
   _ManageProfileScreenState createState() => _ManageProfileScreenState();
 }
 
 class _ManageProfileScreenState extends State<ManageProfileScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ImagePicker _picker = ImagePicker();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-
-  bool _isLoading = true;
+  User? _currentUser;
+  String? _profilePictureUrl;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.userData != null) {
-      // If user data is passed, use it directly to skip fetching
-      _initializeWithUserData(widget.userData!);
-    } else {
-      _fetchProfile(); // Fetch data if not passed
-    }
+    _getCurrentUser();
   }
 
-  void _initializeWithUserData(Map<String, dynamic> userData) {
+  Future<void> _getCurrentUser() async {
     setState(() {
-      _nameController.text = userData['name'] ?? '';
-      _emailController.text = userData['email'] ?? '';
+      _isLoading = true;
+    });
+    _currentUser = _auth.currentUser;
+    if (_currentUser != null) {
+      // Fetch profile picture URL from Firestore with field existence check
+      DocumentSnapshot userDoc =
+      await _firestore.collection('users').doc(_currentUser!.uid).get();
+
+      if (userDoc.exists && userDoc.data() != null) {
+        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+        // Use explicit null check to handle nullable values
+        if (userData != null && userData.containsKey('profilePicture')) {
+          setState(() {
+            _profilePictureUrl = userData['profilePicture'];
+          });
+        } else {
+          setState(() {
+            _profilePictureUrl = null; // Field doesn't exist, so set to null
+          });
+        }
+      }
+    }
+
+    setState(() {
       _isLoading = false;
     });
   }
 
-  Future<void> _fetchProfile() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      User? currentUser = _auth.currentUser;
-
-      if (currentUser != null) {
-        // Fetch full document (since we cannot select specific fields)
-        DocumentSnapshot userDoc = await _firestore
-            .collection('users')
-            .doc(currentUser.uid)
-            .get();
-
-        if (userDoc.exists) {
-          // Only extract the fields we need
-          setState(() {
-            _nameController.text = userDoc['name'] ?? '';
-            _emailController.text = userDoc['email'] ?? '';
-            _isLoading = false;
-          });
-        }
+  Future<void> _changePassword(String newPassword) async {
+    if (_currentUser != null) {
+      try {
+        await _currentUser!.updatePassword(newPassword);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password changed successfully!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
-    } catch (e) {
-      print("Error fetching profile: $e");
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
-  Future<void> _updateProfile() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _uploadProfilePicture() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      String fileName = '${_currentUser!.uid}.jpg';
 
-    try {
-      User? currentUser = _auth.currentUser;
+      try {
+        // Upload image to Firebase Storage
+        Reference storageRef =
+        FirebaseStorage.instance.ref().child('profile_pictures/$fileName');
+        await storageRef.putFile(imageFile);
 
-      if (currentUser != null) {
-        await _firestore.collection('users').doc(currentUser.uid).update({
-          'name': _nameController.text,
-          'email': _emailController.text,
+        // Get the download URL and save it in Firestore
+        String downloadUrl = await storageRef.getDownloadURL();
+
+        // Update Firestore, adding the 'profilePicture' field if it doesn't exist
+        await _firestore.collection('users').doc(_currentUser!.uid).set(
+          {'profilePicture': downloadUrl},
+          SetOptions(merge: true), // Merge to avoid overwriting existing fields
+        );
+
+        setState(() {
+          _profilePictureUrl = downloadUrl;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile updated successfully')),
+          const SnackBar(content: Text('Profile picture updated!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
-    } catch (e) {
-      print("Error updating profile: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -108,24 +116,42 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         title: const Text('Manage Profile'),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loading spinner
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+            const SizedBox(height: 20),
+            _profilePictureUrl != null
+                ? CircleAvatar(
+              radius: 60,
+              backgroundImage: NetworkImage(_profilePictureUrl!),
+            )
+                : const CircleAvatar(
+              radius: 60,
+              child: Icon(Icons.person, size: 50),
             ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _updateProfile,
-              child: const Text('Update Profile'),
+              onPressed: _uploadProfilePicture,
+              child: const Text('Upload Profile Picture'),
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New Password',
+                border: OutlineInputBorder(),
+              ),
+              onFieldSubmitted: _changePassword,
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                String newPassword = "yourNewPassword"; // Replace with input
+                _changePassword(newPassword);
+              },
+              child: const Text('Change Password'),
             ),
           ],
         ),
