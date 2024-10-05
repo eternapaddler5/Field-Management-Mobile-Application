@@ -1,3 +1,4 @@
+import 'package:field_service_managemen_app/view/manage_profile_screen.dart';
 import 'package:field_service_managemen_app/view/manage_user.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -143,7 +144,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: Text(
                   _localizedStrings[_currentLanguage]!['manage_profiles']!),
               onTap: () {
-                // Profile management code here
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ManageProfileScreen()),
+                );
               },
             ),
             const Divider(),
