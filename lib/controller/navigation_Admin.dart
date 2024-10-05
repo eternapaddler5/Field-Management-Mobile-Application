@@ -1,4 +1,5 @@
 import 'package:field_service_managemen_app/view/admin_screen.dart';
+import 'package:field_service_managemen_app/view/analytics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import '../view/service_request_form.dart';
@@ -28,7 +29,7 @@ class _NavigationAdminState extends State<NavigationAdmin> {
     final appScreens = [
       const AdminScreen(),
       ServiceRequestForm(),
-      const Text("Tickets"),
+      AnalyticsScreen(),
       SettingsScreen(
         userRole: ModalRoute.of(context)?.settings.arguments as String? ?? 'Administrator',
         isDarkMode: _isDarkMode,
