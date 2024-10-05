@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
-import 'form_provider.dart'; // Import FormProvider
+
+import 'form_provider.dart';
 
 class ServiceRequestForm extends StatefulWidget {
   @override
@@ -17,6 +18,21 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
   File? _image;
   Position? _currentPosition;
   final ImagePicker _picker = ImagePicker();
+
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String? _selectedServiceType;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -57,38 +73,29 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
     }
   }
 
-  Future<void> _checkAndRequestLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.deniedForever) {
-      // Handle permission permanently denied
-      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
-    }
-  }
-
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       return Future.error('Location services are disabled.');
     }
 
-    await _checkAndRequestLocationPermission();
-
-    // Check permissions again after requesting
-    LocationPermission permission = await Geolocator.checkPermission();
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      return Future.error('Location permissions are denied');
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
     }
 
-    try {
-      _currentPosition = await Geolocator.getCurrentPosition();
-      setState(() {});
-    } catch (e) {
-      print('Error getting location: $e');
-      // Handle the error appropriately, like showing a dialog
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
     }
+
+    _currentPosition = await Geolocator.getCurrentPosition();
+    setState(() {});
   }
 
   @override
@@ -107,6 +114,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
             child: Column(
               children: [
                 TextFormField(
+                  controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Name',
                   ),
@@ -118,6 +126,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                   },
                 ),
                 TextFormField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
                   ),
@@ -132,6 +141,7 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                   },
                 ),
                 TextFormField(
+                  controller: _phoneController,
                   decoration: InputDecoration(
                     labelText: 'Phone',
                   ),
@@ -160,9 +170,14 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                     }
                     return null;
                   },
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedServiceType = value;
+                    });
+                  },
                 ),
                 TextFormField(
+                  controller: _descriptionController,
                   decoration: InputDecoration(
                     labelText: 'Description',
                   ),
@@ -207,14 +222,22 @@ class _ServiceRequestFormState extends State<ServiceRequestForm> {
                         : 'Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
                   ),
                   trailing: Icon(Icons.location_on),
-                  onTap: () async {
-                    await _checkAndRequestLocationPermission();
-                    await _getCurrentLocation();
-                  },
+                  onTap: _getCurrentLocation,
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    formProvider.submitForm();
+                    final formData = {
+                      'name': _nameController.text,
+                      'email': _emailController.text,
+                      'phone': _phoneController.text,
+                      'serviceType': _selectedServiceType,
+                      'description': _descriptionController.text,
+                      'date': _selectedDate != null ? DateFormat.yMd().format(_selectedDate!) : null,
+                      'time': _selectedTime != null ? _selectedTime!.format(context) : null,
+                      'latitude': _currentPosition?.latitude,
+                      'longitude': _currentPosition?.longitude,
+                    };
+                    formProvider.submitForm(formData, _image);
                   },
                   child: Text('Submit'),
                 ),
