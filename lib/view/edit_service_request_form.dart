@@ -11,7 +11,7 @@ class EditServiceRequestForm extends StatefulWidget {
   final int index;
   final Map<String, dynamic> requestData;
 
-  EditServiceRequestForm({required this.index, required this.requestData});
+  const EditServiceRequestForm({super.key, required this.index, required this.requestData});
 
   @override
   _EditServiceRequestFormState createState() => _EditServiceRequestFormState();
@@ -39,7 +39,7 @@ class _EditServiceRequestFormState extends State<EditServiceRequestForm> {
     _descriptionController = TextEditingController(text: widget.requestData['description']);
     _selectedServiceType = widget.requestData['serviceType'];
     _selectedDate = widget.requestData['date'] != null ? DateFormat.yMd().parse(widget.requestData['date']) : null;
-    _selectedTime = widget.requestData['time'] != null ? TimeOfDay(hour: int.parse(widget.requestData['time'].split(":")[0]), minute: int.parse(widget.requestData['time'].split(":")[1])) : null;
+    _selectedTime = widget.requestData['time'] != null ? _parseTime(widget.requestData['time']) : null;
     _image = widget.requestData['image'];
   }
 
@@ -114,6 +114,24 @@ class _EditServiceRequestFormState extends State<EditServiceRequestForm> {
 
     _currentPosition = await Geolocator.getCurrentPosition();
     setState(() {});
+  }
+
+  // Method to parse time string
+  TimeOfDay _parseTime(String time) {
+    // Remove any "AM" or "PM" suffix and trim whitespace
+    String trimmedTime = time.replaceAll(RegExp(r'\s*AM|\s*PM', caseSensitive: false), '').trim();
+
+    // Split the time string into hour and minute
+    final parts = trimmedTime.split(":");
+    if (parts.length != 2) {
+      throw FormatException("Invalid time format");
+    }
+
+    // Parse hour and minute
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   @override

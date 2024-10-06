@@ -13,7 +13,7 @@ class NavigationManager extends StatefulWidget {
 
 class _NavigationManagerState extends State<NavigationManager> {
   final appScreens = [
-    ManagerScreen(),
+    ManagerDashboard(),
     ServiceRequestForm(),
     AnalyticsScreen(),
     const Text("Settings"), // Placeholder for settings screen

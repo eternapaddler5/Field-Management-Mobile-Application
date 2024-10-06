@@ -2,7 +2,9 @@ import 'package:field_service_managemen_app/view/admin_screen.dart';
 import 'package:field_service_managemen_app/view/analytics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import '../view/admin_dashboard.dart';
 import '../view/service_request_form.dart';
+import '../view/service_request_list.dart';
 import '../view/settings_screen.dart';
 
 class NavigationAdmin extends StatefulWidget {
@@ -27,7 +29,7 @@ class _NavigationAdminState extends State<NavigationAdmin> {
   @override
   Widget build(BuildContext context) {
     final appScreens = [
-      const AdminScreen(),
+      AdminDashboard(),
       ServiceRequestForm(),
       AnalyticsScreen(),
       SettingsScreen(

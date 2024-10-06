@@ -1,3 +1,4 @@
+import 'package:field_service_managemen_app/view/manage_user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -48,12 +49,13 @@ class _MyAppState extends State<MyApp> {
         home: const SplashScreen(),
         routes: {
           '/serviceRequestList': (context) => ServiceRequestList(),
+          '/ManageUserScreen': (context) => ManageUsersScreen(),
           '/serviceRequestForm': (context) => form_view.ServiceRequestForm(),
           '/loginScreen': (context) => const LoginScreen(),
           '/signUpScreen': (context) => const SignUpScreen(),
           '/adminScreen': (context) => const AdminScreen(),
-          '/technicianScreen': (context) => const TechnicianScreen(),
-          '/managerScreen': (context) => const ManagerScreen(),
+          '/technicianScreen': (context) => TechnicianDashboard(),
+          '/managerScreen': (context) =>  ManagerDashboard(),
           '/forgotPasswordScreen': (context) => const ForgotPasswordScreen(),
           '/navigationAdmin': (context) => const NavigationAdmin(),
           '/navigationManager': (context) => const NavigationManager(),

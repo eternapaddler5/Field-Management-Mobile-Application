@@ -15,7 +15,7 @@ class NavigationTech extends StatefulWidget {
 
 class _NavigationTechState extends State<NavigationTech> {
   final appScreens = [
-    const TechnicianScreen(),
+    TechnicianDashboard(),
     ServiceRequestForm(),
     const Text("Access denied"),
     const Text("Settings"), // Placeholder for settings screen

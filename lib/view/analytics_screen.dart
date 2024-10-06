@@ -1,7 +1,69 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AnalyticsScreen extends StatelessWidget {
+class AnalyticsScreen extends StatefulWidget {
+  @override
+  _AnalyticsScreenState createState() => _AnalyticsScreenState();
+}
+
+class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  Map<String, double> serviceTypeData = {};
+  Map<int, int> requestsOverTime = {};
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAnalyticsData();
+  }
+
+  Future<void> fetchAnalyticsData() async {
+    final QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('service_requests').get();
+
+    Map<String, int> tempServiceTypeData = {};
+    Map<int, int> tempRequestsOverTime = {};
+
+    snapshot.docs.forEach((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      // Count service types
+      String serviceType = data['serviceType'] ?? 'Unknown';
+      if (tempServiceTypeData.containsKey(serviceType)) {
+        tempServiceTypeData[serviceType] = tempServiceTypeData[serviceType]! + 1;
+      } else {
+        tempServiceTypeData[serviceType] = 1;
+      }
+
+      // Count requests over time (assuming there's a 'createdAt' timestamp field)
+      if (data['createdAt'] != null) {
+        Timestamp timestamp = data['createdAt'] as Timestamp;
+        DateTime createdAt = timestamp.toDate();
+
+        int month = createdAt.month; // You can group by month or year
+        print('Request completed in month: $month'); // Logging the month for debugging
+
+        if (tempRequestsOverTime.containsKey(month)) {
+          tempRequestsOverTime[month] = tempRequestsOverTime[month]! + 1;
+        } else {
+          tempRequestsOverTime[month] = 1;
+        }
+      } else {
+        print('Missing createdAt field for document: ${doc.id}'); // Log if missing
+      }
+    });
+
+    // Convert to percentages for the pie chart
+    int totalRequests = tempServiceTypeData.values.reduce((a, b) => a + b);
+    serviceTypeData = tempServiceTypeData.map((key, value) => MapEntry(key, (value / totalRequests) * 100));
+
+    // Log the requests over time to ensure it's correctly populated
+    print('Requests Over Time: $tempRequestsOverTime');
+
+    setState(() {
+      requestsOverTime = tempRequestsOverTime;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,112 +77,52 @@ class AnalyticsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Pie Chart for Service Types
-              Text(
-                'Popular Service Types',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      'Popular Service Types',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
               SizedBox(
-                height: 200, // Adjust height as needed
+                height: 440, // Adjust height as needed
                 child: PieChart(
                   PieChartData(
-                    sections: [
-                      PieChartSectionData(
-                        color: Colors.blue,
-                        value: 40, // 40% of service type 1
-                        title: 'Type 1\n40%',
+                    sections: serviceTypeData.entries.map((entry) {
+                      return PieChartSectionData(
+                        color: _getColorForServiceType(entry.key),
+                        value: entry.value,
+                        title: '${entry.key}\n${entry.value.toStringAsFixed(1)}%',
                         radius: 60,
                         titleStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      PieChartSectionData(
-                        color: Colors.green,
-                        value: 30, // 30% of service type 2
-                        title: 'Type 2\n30%',
-                        radius: 60,
-                        titleStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      PieChartSectionData(
-                        color: Colors.orange,
-                        value: 20, // 20% of service type 3
-                        title: 'Type 3\n20%',
-                        radius: 60,
-                        titleStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      PieChartSectionData(
-                        color: Colors.red,
-                        value: 10, // 10% of service type 4
-                        title: 'Type 4\n10%',
-                        radius: 60,
-                        titleStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
               const SizedBox(height: 40),
 
               // Line Chart for Requests Over Time
-              Text(
-                'Requests Completed Over Time',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(
-                height: 300, // Adjust the height as needed
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: true),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          interval: 5,
-                          getTitlesWidget: (value, meta) {
-                            return Text(value.toInt().toString());
-                          },
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            // Assuming each index represents a date or time
-                            switch (value.toInt()) {
-                              case 1:
-                                return Text('Jan');
-                              case 2:
-                                return Text('Feb');
-                              case 3:
-                                return Text('Mar');
-                              case 4:
-                                return Text('Apr');
-                              default:
-                                return Text('');
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: [
-                          FlSpot(1, 10), // e.g., 10 requests in Jan
-                          FlSpot(2, 15), // 15 requests in Feb
-                          FlSpot(3, 7),  // 7 requests in Mar
-                          FlSpot(4, 20), // 20 requests in Apr
-                        ],
-                        isCurved: true,
-                        color: Colors.blue,
-                        barWidth: 4,
-                        belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.3)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Color _getColorForServiceType(String serviceType) {
+    switch (serviceType) {
+      case 'repair':
+        return Colors.blue;
+      case 'maintenance':
+        return Colors.green;
+    // Add more service types and colors as needed
+      default:
+        return Colors.grey;
+    }
   }
 }
