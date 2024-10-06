@@ -1,4 +1,6 @@
-import 'package:field_service_managemen_app/view/Technician_screen.dart';
+import 'package:field_service_managemen_app/view/analytics_screen.dart';
+import 'package:field_service_managemen_app/view/manager_screen.dart';
+import 'package:field_service_managemen_app/view/service_request_form.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -11,9 +13,9 @@ class NavigationManager extends StatefulWidget {
 
 class _NavigationManagerState extends State<NavigationManager> {
   final appScreens = [
-    const TechnicianScreen(),
-    const Text("Search"),
-    const Text("Tickets"),
+    ManagerDashboard(),
+    ServiceRequestForm(),
+    AnalyticsScreen(),
     const Text("Settings"), // Placeholder for settings screen
   ];
 

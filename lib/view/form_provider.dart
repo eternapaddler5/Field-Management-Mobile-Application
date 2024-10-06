@@ -1,82 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'dart:io';
 
 class FormProvider with ChangeNotifier {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void submitForm() {
-    if (formKey.currentState?.validate() ?? false) {
-      formKey.currentState?.save();
-      // Handle form submission logic here, e.g., send data to server
-      print("Form submitted successfully");
-    } else {
-      print("Validation failed");
+  List<Map<String, dynamic>> _serviceRequests = [];
+
+  List<Map<String, dynamic>> get serviceRequests => _serviceRequests;
+
+  Future<void> submitForm(Map<String, dynamic> formData, File? image) async {
+    try {
+      formData['status'] = 'Pending'; // Set initial status to Pending
+      formData['image'] = image;
+
+      // Save to Firestore
+      await _firestore.collection('service_requests').add({
+        'name': formData['name'],
+        'email': formData['email'],
+        'phone': formData['phone'],
+        'serviceType': formData['serviceType'],
+        'description': formData['description'],
+        'date': formData['date'],
+        'time': formData['time'],
+        'latitude': formData['latitude'],
+        'longitude': formData['longitude'],
+        'status': formData['status'],
+        // Add other fields as necessary
+      });
+
+      _serviceRequests.add(formData);
+      notifyListeners();
+    } catch (e) {
+      print("Error submitting form: $e");
     }
   }
-}
 
-class LoginPage extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
+  void updateStatus(int index, String status) {
+    _serviceRequests[index]['status'] = status;
+    notifyListeners();
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _loginFormKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_loginFormKey.currentState?.validate() ?? false) {
-                    // For simplicity, we just navigate to the form on any non-empty input
-                    Navigator.pushNamed(context, '/serviceRequestForm');
-                  }
-                },
-                child: Text('Login'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void updateForm(int index, Map<String, dynamic> updatedData, File? image) {
+    updatedData['image'] = image;
+    _serviceRequests[index] = updatedData;
+    notifyListeners();
   }
 }
